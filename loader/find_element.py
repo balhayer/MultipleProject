@@ -1,47 +1,39 @@
+from telnetlib import EC
+
 import pytest
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver import chrome
 from selenium.webdriver.common.by import By
 import time
 
+from selenium.webdriver.support import ui
+from selenium.webdriver.support.wait import WebDriverWait
 
-def test_loaded():
+
+class js_variable_true(object):
+    def __init__(self, variable):
+        self.variable = variable
+
+    def __call__(self, driver):
+        return driver.execute_script("return {0};".format(self.variable))
+
+
+def is_visible(locator, timeout=30):
     driver = webdriver.Chrome(executable_path=r'C:\chromedriver.exe')
-    # driver.implicitly_wait(5)
-    # site_loaded_false = driver.execute_script("return _siteLoaded")
 
-    driver.get("http://svc-adveappsvc@wdc.com:2GpY9tx5FN7xx2@adve.wdc.com/Home/")
+    driver.get("https://testsheepnz.github.io/BasicCalculator.html")
+    driver.implicitly_wait(5)
 
-    site_loaded_false = driver.execute_async_script("return _siteLoaded")
-    # site_loaded_false = driver.execute_script("return _siteLoaded")
-    # driver.implicitly_wait(5)
-    time.sleep(1)
+    try:
+        element = WebDriverWait(chrome, 5).until(js_variable_true("prependExistingHelpBlock.visible"))
+    finally:
+        chrome.quit()
 
-    # variables in JS > home.js?@dvever=1.48
-    # site_loaded_false = driver.execute_script("return _siteLoaded")
-    auto_order = driver.execute_script("return _autoOrder")
-    current_version = driver.execute_script("return _adveCurrentVersion")
-    site_loaded_true = driver.execute_script("return _siteLoaded")
+    try:
+        ui.WebDriverWait(chrome, timeout).until(EC.visibility_of_element_located((By.ID, 'prependExistingHelpBlock')))
+        return True
+    except TimeoutException:
+        return False
 
-    # element in div/body
-    site_loaded_div = driver.find_element(By.CLASS_NAME, '_siteLoadedDiv').is_displayed()
-
-    # driver.implicitly_wait(5)
-
-    print("Before Site Loaded [false]: ", site_loaded_false)
-
-    print("Auto Order: ", auto_order)
-
-    print("ADVE Current Version: ", current_version)
-
-    print("_siteLoadedDiv: ", site_loaded_div)
-
-    print("After Site Loaded [true]: ", site_loaded_true)
-
-    # assert current_version == "?@dvever=1.43"
-    # return test_site_loaded()
-
-
-if __name__ == '__main__':
-    test_loaded()
-
-#pytest find_element.py --html=JS-variable.html
+    print("prependExistingHelpBlock [false]: ", element)
